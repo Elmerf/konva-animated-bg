@@ -1,10 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import Konva from "konva";
 import { Image, Layer, Rect, Stage } from "react-konva";
 import "gifler";
 
+import useImageInput from "./hooks/useImageInput";
+
 import "./App.css";
+import useKonvaAnimatedGIF from "./hooks/useKonvaAnimateGIF";
 
 const STAGE_SIZE = {
   width: 3840,
@@ -18,72 +21,8 @@ type BackgroundShape = {
 const BackgroundShape: React.FC<BackgroundShape> = (props) => {
   const rectRef = useRef<Konva.Rect>(null);
   const imageRef = useRef<Konva.Image>(null);
-  const canvasRef = useRef<HTMLCanvasElement>();
 
-  useEffect(() => {
-    // Set the Background Image
-    if (props.image?.src.split(",")[0].includes("gif")) {
-      canvasRef.current = document.createElement("canvas");
-      canvasRef.current.width = props.image.width;
-      canvasRef.current.height = props.image.height;
-      const ctx = canvasRef.current.getContext("2d");
-
-      if (ctx === null) throw new Error("Cannot initialize canvas context");
-      ctx.fillStyle = "white";
-      ctx.fillRect(0, 0, props.image.width, props.image.height);
-
-      (window as any).gifler(props.image.src).get((a: any) => {
-        const anim = a;
-
-        anim.animateInCanvas(canvasRef.current);
-        anim.onDrawFrame = (ctx: any, frame: any) => {
-          ctx.drawImage(frame.buffer, frame.x, frame.y);
-          imageRef.current?.getLayer()?.draw();
-        };
-      });
-
-      imageRef.current?.setAttr("image", canvasRef.current);
-    } else {
-      imageRef.current?.setAttr("image", props.image);
-    }
-
-    // Scale image to canvas, emulate css object-fit: cover
-    if (imageRef.current) {
-      const imageWidth = props.image?.width ?? 0;
-      const imageHeight = props.image?.height ?? 0;
-
-      const aspectRatio = imageRef.current.width() / imageRef.current.height();
-      const imageRatio = imageWidth / imageHeight;
-
-      let newWidth;
-      let newHeight;
-
-      if (aspectRatio >= imageRatio) {
-        newWidth = imageWidth;
-        newHeight = imageWidth / aspectRatio;
-      } else {
-        newWidth = imageHeight * aspectRatio;
-        newHeight = imageHeight;
-      }
-
-      const x = (imageWidth - newWidth) / 2;
-      const y = (imageHeight - newHeight) / 2;
-
-      // console.log({
-      //   cropX: x,
-      //   cropY: y,
-      //   cropWidth: newWidth,
-      //   cropHeight: newHeight,
-      // });
-
-      imageRef.current.setAttrs({
-        cropX: x,
-        cropY: y,
-        cropWidth: newWidth,
-        cropHeight: newHeight,
-      });
-    }
-  }, [props.image]);
+  useKonvaAnimatedGIF(props.image, imageRef);
 
   if (props.image) {
     return (
@@ -106,29 +45,95 @@ const BackgroundShape: React.FC<BackgroundShape> = (props) => {
   }
 };
 
+type PlaceholderShape = {
+  width?: number;
+  height?: number;
+  x?: number;
+  y?: number;
+};
+
+const PlaceholderShape: React.FC<PlaceholderShape> = (props) => {
+  const rectRef = useRef<Konva.Rect>(null);
+  const imgRef = useRef<Konva.Image>(null);
+
+  const { loadImage, image } = useImageInput();
+
+  useKonvaAnimatedGIF(image, imgRef);
+
+  if (image) {
+    return (
+      <Image
+        ref={imgRef}
+        onMouseEnter={() => {
+          if (imgRef.current)
+            (
+              imgRef.current.getStage() as Konva.Stage
+            ).container().style.cursor = "pointer";
+        }}
+        onMouseLeave={() => {
+          if (imgRef.current)
+            (
+              imgRef.current.getStage() as Konva.Stage
+            ).container().style.cursor = "default";
+        }}
+        onMouseDown={() => {
+          loadImage();
+        }}
+        onTouchStart={() => {
+          loadImage();
+        }}
+        image={undefined}
+        width={props.width}
+        height={props.height}
+        x={props.x}
+        y={props.y}
+      />
+    );
+  } else {
+    return (
+      <Rect
+        ref={rectRef}
+        onMouseEnter={() => {
+          if (rectRef.current)
+            (
+              rectRef.current.getStage() as Konva.Stage
+            ).container().style.cursor = "pointer";
+        }}
+        onMouseLeave={() => {
+          if (rectRef.current)
+            (
+              rectRef.current.getStage() as Konva.Stage
+            ).container().style.cursor = "default";
+        }}
+        onMouseDown={() => {
+          loadImage();
+        }}
+        onTouchStart={() => {
+          loadImage();
+        }}
+        onTo
+        width={props.width}
+        height={props.height}
+        x={props.x}
+        y={props.y}
+        fill="grey"
+      />
+    );
+  }
+};
+
+PlaceholderShape.defaultProps = {
+  width: 50,
+  height: 50,
+  x: 0,
+  y: 0,
+};
+
 function App() {
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
 
-  const [bgImage, setBgImage] = useState<HTMLImageElement | undefined>(
-    undefined
-  );
-
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files?.[0]) {
-      const file = event.target.files[0];
-      const reader = new FileReader();
-
-      reader.readAsDataURL(file);
-
-      reader.onload = () => {
-        const img = new window.Image();
-        img.src = reader.result as string;
-        setBgImage(img);
-      };
-    }
-  };
+  const { loadImage, image } = useImageInput();
 
   useEffect(() => {
     const fitToParentContainer = () => {
@@ -153,24 +158,20 @@ function App() {
       <button
         role="button"
         onClick={() => {
-          if (inputRef.current) {
-            inputRef.current.click();
-          }
+          loadImage();
         }}
       >
         Change Background
       </button>
-      <input
-        ref={inputRef}
-        type="file"
-        style={{ display: "none" }}
-        accept=".png, .jpg, .gif"
-        onChange={handleImageChange}
-      />
       <p>*only accept .png, .jpg, and .gif format</p>
       <Stage ref={stageRef} width={STAGE_SIZE.width} height={STAGE_SIZE.height}>
         <Layer>
-          <BackgroundShape image={bgImage} />
+          <BackgroundShape image={image} />
+        </Layer>
+        <Layer>
+          <PlaceholderShape width={1000} height={1000} x={500} y={200} />
+          <PlaceholderShape width={500} height={500} x={750} y={1400} />
+          <PlaceholderShape width={1200} height={1800} x={2000} y={200} />
         </Layer>
       </Stage>
     </div>
