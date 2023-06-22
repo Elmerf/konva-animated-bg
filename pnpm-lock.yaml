@@ -14,8 +14,8 @@ dependencies:
     specifier: ^18.2.0
     version: 18.2.0(react@18.2.0)
   react-konva:
-    specifier: ^18.2.9
-    version: 18.2.9(konva@9.2.0)(react-dom@18.2.0)(react@18.2.0)
+    specifier: ^18.2.10
+    version: 18.2.10(konva@9.2.0)(react-dom@18.2.0)(react@18.2.0)
 
 devDependencies:
   '@types/react':
@@ -1554,8 +1554,8 @@ packages:
       scheduler: 0.23.0
     dev: false
 
-  /react-konva@18.2.9(konva@9.2.0)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-GfFalHrAlbos23B9vlZkFf+128eimjbenANDtMvTlZskHX25aLt9JxIgX5Cq+QVRrMJBD/SdyIhUxhAuK0A82w==}
+  /react-konva@18.2.10(konva@9.2.0)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-ohcX1BJINL43m4ynjZ24MxFI1syjBdrXhqVxYVDw2rKgr3yuS0x/6m1Y2Z4sl4T/gKhfreBx8KHisd0XC6OT1g==}
     peerDependencies:
       konva: ^8.0.1 || ^7.2.5 || ^9.0.0
       react: '>=18.0.0'
