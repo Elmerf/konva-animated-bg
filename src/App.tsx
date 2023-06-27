@@ -1,6 +1,4 @@
-// import KonvaStage from "./components/KonvaStage";
-
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { InterestsOutlined, ViewQuiltOutlined } from "@mui/icons-material";
 import {
   AppBar,

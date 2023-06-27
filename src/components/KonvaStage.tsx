@@ -3,12 +3,10 @@ import Konva from "konva";
 import { Image, Layer, Stage, Transformer } from "react-konva";
 import { Button } from "@mui/material";
 import BackgroundShape from "./BackgroundShape";
-// import PlaceholderShape from "./PlaceholderShape";
 import useImageInput from "../hooks/useImageInput";
 import useKonvaAnimatedGIF from "../hooks/useKonvaAnimateGIF";
 
 import { DEFAULT_STAGE_SIZE } from "../constants";
-import type { KonvaEventObject } from "konva/lib/Node";
 
 const useStickers = () => {
   const [stickers, setStickers] = useState<HTMLImageElement[]>([]);
