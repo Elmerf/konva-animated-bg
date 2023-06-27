@@ -1,180 +1,181 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useRef } from "react";
-import Konva from "konva";
-import { Image, Layer, Rect, Stage } from "react-konva";
-import "gifler";
+// import KonvaStage from "./components/KonvaStage";
 
-import useImageInput from "./hooks/useImageInput";
+import { useRef, useState } from "react";
+import { InterestsOutlined, ViewQuiltOutlined } from "@mui/icons-material";
+import {
+  AppBar,
+  Box,
+  CssBaseline,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  Toolbar,
+  Typography,
+  colors,
+} from "@mui/material";
 
-import "./App.css";
-import useKonvaAnimatedGIF from "./hooks/useKonvaAnimateGIF";
+import type { SxProps, Theme } from "@mui/material";
+import KonvaStage from "./components/KonvaStage";
 
-const STAGE_SIZE = {
-  width: 3840,
-  height: 2160,
-};
-
-type BackgroundShape = {
-  image?: HTMLImageElement;
-};
-
-const BackgroundShape: React.FC<BackgroundShape> = (props) => {
-  const rectRef = useRef<Konva.Rect>(null);
-  const imageRef = useRef<Konva.Image>(null);
-
-  useKonvaAnimatedGIF(props.image, imageRef);
-
-  if (props.image) {
-    return (
-      <Image
-        ref={imageRef}
-        image={undefined}
-        width={STAGE_SIZE.width}
-        height={STAGE_SIZE.height}
-      />
-    );
-  } else {
-    return (
-      <Rect
-        ref={rectRef}
-        width={STAGE_SIZE.width}
-        height={STAGE_SIZE.height}
-        fill="white"
-      />
-    );
-  }
-};
-
-type PlaceholderShape = {
-  width?: number;
-  height?: number;
-  x?: number;
-  y?: number;
-};
-
-const PlaceholderShape: React.FC<PlaceholderShape> = (props) => {
-  const rectRef = useRef<Konva.Rect>(null);
-  const imgRef = useRef<Konva.Image>(null);
-
-  const { loadImage, image } = useImageInput();
-
-  useKonvaAnimatedGIF(image, imgRef);
-
-  if (image) {
-    return (
-      <Image
-        ref={imgRef}
-        onMouseEnter={() => {
-          if (imgRef.current)
-            (
-              imgRef.current.getStage() as Konva.Stage
-            ).container().style.cursor = "pointer";
-        }}
-        onMouseLeave={() => {
-          if (imgRef.current)
-            (
-              imgRef.current.getStage() as Konva.Stage
-            ).container().style.cursor = "default";
-        }}
-        onMouseDown={() => {
-          loadImage();
-        }}
-        onTouchStart={() => {
-          loadImage();
-        }}
-        image={undefined}
-        width={props.width}
-        height={props.height}
-        x={props.x}
-        y={props.y}
-      />
-    );
-  } else {
-    return (
-      <Rect
-        ref={rectRef}
-        onMouseEnter={() => {
-          if (rectRef.current)
-            (
-              rectRef.current.getStage() as Konva.Stage
-            ).container().style.cursor = "pointer";
-        }}
-        onMouseLeave={() => {
-          if (rectRef.current)
-            (
-              rectRef.current.getStage() as Konva.Stage
-            ).container().style.cursor = "default";
-        }}
-        onMouseDown={() => {
-          loadImage();
-        }}
-        onTouchStart={() => {
-          loadImage();
-        }}
-        onTo
-        width={props.width}
-        height={props.height}
-        x={props.x}
-        y={props.y}
-        fill="grey"
-      />
-    );
-  }
-};
-
-PlaceholderShape.defaultProps = {
-  width: 50,
-  height: 50,
-  x: 0,
-  y: 0,
-};
+const LIST_MENU = [
+  {
+    label: "Template",
+    icon: ViewQuiltOutlined,
+  },
+  {
+    label: "Elements",
+    icon: InterestsOutlined,
+  },
+];
 
 function App() {
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const stageRef = useRef<Konva.Stage>(null);
-
-  const { loadImage, image } = useImageInput();
-
-  useEffect(() => {
-    const fitToParentContainer = () => {
-      if (wrapperRef.current && stageRef.current) {
-        const wrapperWidth = wrapperRef.current.offsetWidth;
-        const scale = wrapperWidth / STAGE_SIZE.width;
-
-        stageRef.current.width(STAGE_SIZE.width * scale);
-        stageRef.current.height(STAGE_SIZE.height * scale);
-        stageRef.current.scale({ x: scale, y: scale });
-      }
-    };
-
-    fitToParentContainer();
-    window.addEventListener("resize", fitToParentContainer);
-
-    return () => window.removeEventListener("resize", fitToParentContainer);
-  }, []);
+  const [selectedMenu, setSelectedMenu] = useState(LIST_MENU[0].label);
 
   return (
-    <div ref={wrapperRef} className="wrapper" style={{ width: "70vw" }}>
-      <button
-        role="button"
-        onClick={() => {
-          loadImage();
+    <Box sx={{ display: "flex" }}>
+      <CssBaseline />
+      <AppBar
+        position="fixed"
+        sx={(theme) => ({
+          zIndex: theme.zIndex.drawer + 1,
+          background: `linear-gradient(to right, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+        })}
+      >
+        <Toolbar>
+          <Typography variant="h6">
+            Simple image editing with Konva (not optimized for mobile)
+          </Typography>
+        </Toolbar>
+      </AppBar>
+      <Drawer
+        variant="permanent"
+        sx={(theme) => ({
+          width: "72px",
+          flexShrink: 0,
+          "& .MuiDrawer-paper": {
+            border: 0,
+            background: "#252627",
+            color: theme.palette.primary.contrastText,
+          },
+        })}
+      >
+        <Toolbar />
+        <List disablePadding>
+          {LIST_MENU.map((item) => {
+            const sxSelected: SxProps<Theme> = (() => {
+              if (selectedMenu === item.label) {
+                return {
+                  background: colors.grey[800],
+                  opacity: 1,
+                  ":before, :after": {
+                    content: `""`,
+                    position: "absolute",
+                    display: "block",
+                    height: "16px",
+                    width: "16px",
+                    right: 0,
+                    background: `radial-gradient(circle closest-side, transparent 0%, transparent 50%, ${colors.grey[800]} 0) 200% 200% / 400% 400%`,
+                  },
+                  ":before": {
+                    top: "-16px",
+                  },
+                  ":after": {
+                    bottom: "-16px",
+                    transform: "scaleY(-1)",
+                  },
+                };
+              }
+              return {
+                opacity: 0.6,
+                "&:hover": {
+                  opacity: 1,
+                },
+              };
+            })();
+
+            return (
+              <ListItem
+                key={item.label}
+                disablePadding
+                sx={{ display: "block", ...sxSelected }}
+              >
+                <ListItemButton
+                  disableTouchRipple
+                  disableRipple
+                  disableGutters
+                  sx={{
+                    fontSize: "1.75em",
+                    width: 72,
+                    height: 72,
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    "&:hover": {
+                      background: "transparent",
+                    },
+                  }}
+                  onClick={() => {
+                    setSelectedMenu(item.label);
+                  }}
+                >
+                  {<item.icon fontSize="inherit" />}
+                  <Typography variant="caption" flexGrow={0} fontSize={10}>
+                    {item.label}
+                  </Typography>
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
+        </List>
+      </Drawer>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
         }}
       >
-        Change Background
-      </button>
-      <p>*only accept .png, .jpg, and .gif format</p>
-      <Stage ref={stageRef} width={STAGE_SIZE.width} height={STAGE_SIZE.height}>
-        <Layer>
-          <BackgroundShape image={image} />
-        </Layer>
-        <Layer>
-          <PlaceholderShape width={1000} height={1000} x={500} y={200} />
-          <PlaceholderShape width={500} height={500} x={750} y={1400} />
-          <PlaceholderShape width={1200} height={1800} x={2000} y={200} />
-        </Layer>
-      </Stage>
-    </div>
+        <Toolbar />
+        <Box sx={{ display: "flex", flexGrow: 1 }}>
+          <Box
+            sx={{
+              width: "20em",
+              bgcolor: "grey.800",
+              color: "primary.contrastText",
+              p: 3,
+            }}
+          >
+            <Typography>TODO LIST:</Typography>
+            <Typography variant="body2">1. Add Save</Typography>
+            <Typography variant="body2">2. Delete Stickers</Typography>
+          </Box>
+          <Box
+            sx={{
+              flexGrow: 1,
+              bgcolor: "grey.200",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Box sx={{ bgcolor: "white", boxShadow: 2 }}>
+              <Typography variant="body1" px={2} py={1}>
+                List of tools goes here
+              </Typography>
+            </Box>
+            <Box sx={{ flexGrow: 1, position: "relative" }}>
+              <KonvaStage />
+            </Box>
+            <Box sx={{ bgcolor: "white", boxShadow: 2 }}>
+              <Typography variant="body1" px={2} py={1}>
+                List of tools goes here
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }
 
