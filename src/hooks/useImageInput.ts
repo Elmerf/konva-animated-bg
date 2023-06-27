@@ -19,13 +19,17 @@ const useImageInput = () => {
         setImage(img);
       };
     }
+
+    setImage(undefined);
   };
 
   const loadImage = () => {
     inputRef.current.click();
   };
 
-  return { loadImage, image };
+  const resetImage = () => setImage(undefined);
+
+  return { loadImage, resetImage, image };
 };
 
 export default useImageInput;
